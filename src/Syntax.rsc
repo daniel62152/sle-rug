@@ -12,25 +12,58 @@ start syntax Form
 
 // TODO: question, computed question, block, if-then-else, if-then
 syntax Question
-  = 
-  ; 
+  =  "if" "("Expr")" "{" Question* "}"
+  | "if" "("Expr")" "{" Question* "}" "else" "{" Question* "}"
+  | "\""Str"\"" Id":" Type
+  | "\""Str"\"" Id":" Type "=" Expr 
+  ;
 
 // TODO: +, -, *, /, &&, ||, !, >, <, <=, >=, ==, !=, literals (bool, int, str)
 // Think about disambiguation using priorities and associativity
 // and use C/Java style precedence rules (look it up on the internet)
 syntax Expr 
   = Id \ "true" \ "false" // true/false are reserved keywords.
+  //| Str
+  | Int
+  | Bool
+  | bracket "(" Expr ")"
+  | "!" Expr
+  >
+  non-assoc (
+      left Expr "*" Expr \ "true" \ "false"
+    | non-assoc Expr "/" Expr \ "true" \ "false"
+  )
+  >
+  left (
+      left Expr "+" Expr \ "true" \ "false"
+    | left Expr "-" Expr \ "true" \ "false"
+  )
+  >
+  non-assoc (
+  	  non-assoc Expr "\>" Expr \ "true" \ "false"
+    | non-assoc Expr "\<" Expr \ "true" \ "false"
+    | non-assoc Expr "\>=" Expr \ "true" \ "false"
+    | non-assoc Expr "\<=" Expr \ "true" \ "false"
+  )
+  >
+  left (
+      left Expr "==" Expr
+    | left Expr "!=" Expr
+  )
+  > left Expr "&&" Expr
+  > left Expr "||" Expr
   ;
   
 syntax Type
-  = ;  
+  = "string"
+  | "integer"
+  | "boolean"
+  ;  
   
-lexical Str = ;
+//lexical Str = [a-z A-Z][a-z A-Z]*"?"?":"?;
+//lexical Str = "\"" ![\"]*  "\"";
+lexical Str = [\t-\n\r\ A-Z a-z 0-9 _]*"?"?":"?;
 
-lexical Int 
-  = ;
+lexical Int = [0-9]+;
 
-lexical Bool = ;
-
-
-
+lexical Bool = "true" | "false";

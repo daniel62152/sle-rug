@@ -23,7 +23,7 @@ syntax Question
 // and use C/Java style precedence rules (look it up on the internet)
 syntax Expr 
   = Id \ "true" \ "false" // true/false are reserved keywords.
-  //| Str
+  | Str
   | Int
   | Bool
   | bracket "(" Expr ")"
@@ -60,9 +60,7 @@ syntax Type
   | "boolean"
   ;  
   
-//lexical Str = [a-z A-Z][a-z A-Z]*"?"?":"?;
-//lexical Str = "\"" ![\"]*  "\"";
-lexical Str = [\t-\n\r\ A-Z a-z 0-9 _]*"?"?":"?;
+lexical Str = [A-Z][\t-\n\r\ A-Z a-z 0-9 _]*"?"?":"?;
 
 lexical Int = [0-9]+;
 

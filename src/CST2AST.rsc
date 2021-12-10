@@ -4,6 +4,7 @@ import Syntax;
 import AST;
 
 import ParseTree;
+import String;
 
 /*
  * Implement a mapping from concrete syntax trees (CSTs) to abstract syntax trees (ASTs)

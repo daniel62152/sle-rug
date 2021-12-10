@@ -80,8 +80,8 @@ AExpr cst2ast((Expr)`<Bool x>`)
 AExpr cst2ast((Expr)`(<Expr e>)`)
   = cst2ast(e);
   
-AExpr cst2ast((Expr)`not <Expr e>`)
-  = not(cst2ast(e));
+AExpr cst2ast((Expr)`!<Expr e>`)
+  = not(cst2ast(e)); 
 
 AExpr cst2ast((Expr)`<Expr expr1> * <Expr expr2>`)
   = mul(cst2ast(expr1), cst2ast(expr2));

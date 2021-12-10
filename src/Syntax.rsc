@@ -61,6 +61,7 @@ syntax Type
   ;  
   
 lexical Str = [A-Z][\t-\n\r\ A-Z a-z 0-9 _]*"?"?":"?;
+//lexical Str = ![\"]*"?"?":"?;
 
 lexical Int = [0-9]+;
 

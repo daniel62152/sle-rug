@@ -1,7 +1,5 @@
 module AST
 
-import Syntax;
-
 /*
  * Define Abstract Syntax for QL
  *

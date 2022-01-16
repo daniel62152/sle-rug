@@ -25,7 +25,6 @@ set[Message] collect(AForm f) {//TEnv collect(AForm f) {
   
   set[Message] msgs = {};
   
-
   for(/AQuestion q:= f) {
 	  temp = check(q, collection, rg.useDef);
 	  msgs += temp;
@@ -34,16 +33,16 @@ set[Message] collect(AForm f) {//TEnv collect(AForm f) {
   return msgs; 
 }
 
-set[Message] check(AForm f, TEnv tenv, UseDef useDef) {
-  return {}; 
-}
+//set[Message] check(AForm f, TEnv tenv, UseDef useDef) {
+//  return {}; 
+//}
 
 //Prerequisites:
 // Check 1 - produce an error if there are declared questions with the same name but different types.
 // Check 2 - duplicate labels should trigger a warning 
 // Check 3 - the declared type computed questions should match the type of the expression.
 set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
-    set[Message] msgs = {};
+  set[Message] msgs = {};
   switch (q) {
     case normalQ(str phrase, AId i, AType t ):{
     	//---Check 1, 2
@@ -53,7 +52,6 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
     case computedQ(str phrase, AId i, AType t, AExpr expr):{
     	//---Check 1, 2 and 3
     	msgs += checkQuestionsDifferentTypes(i, t, phrase, tenv, useDef);
-		
     }
   }
    return msgs;

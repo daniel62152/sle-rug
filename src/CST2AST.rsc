@@ -16,6 +16,16 @@ import String;
  * - See the ref example on how to obtain and propagate source locations.
  */
 
+bool toBool(str text){
+	if(text == "true"){
+		return true;
+		
+	} else {
+		return false;
+	}
+}
+
+
 AForm cst2ast(start[Form] sf) {
   Form f = sf.top; // remove layout before and after form
   switch (f) {
@@ -37,9 +47,9 @@ AQuestion cst2ast(Question q) {
 AExpr cst2ast(Expr e) {
   switch (e) {
     case exp:(Expr)`<Id x>`: return ref(id("<x>", src=x@\loc), src=exp@\loc);
-    case exp:(Expr)`<Str x>`: return var("<x>", src=exp@\loc);
-    case exp:(Expr)`<Int x>`: return var("<x>", src=exp@\loc);
-    case exp:(Expr)`<Bool x>`: return var("<x>", src=exp@\loc);
+    case exp:(Expr)`<Str x>`: return strVal("<x>", src=exp@\loc);
+    case exp:(Expr)`<Int x>`: return intVal(toInt("<x>"), src=exp@\loc);
+    case exp:(Expr)`<Bool x>`: return boolVal(toBool("<x>"), src=exp@\loc);
     case exp:(Expr)`(<Expr e>)`: return cst2ast(e);
     case exp:(Expr)`!<Expr e>`: return not(cst2ast(e), src=exp@\loc);
     case exp:(Expr)`<Expr expr1> * <Expr expr2>`: return mul(cst2ast(expr1), cst2ast(expr2), src=exp@\loc);

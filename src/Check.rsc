@@ -53,8 +53,8 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
     	//---Check 1, 2
     	msgs += checkQuestionsDifferentTypes(i, t, phrase, tenv, useDef,q.src);
     	//---Check 3
-    	msgs += checkQuestionsExpressionTypes(t, tenv, useDef);
-    	msgs += check(expr, tenv, useDef);
+    	msgs += checkQuestionsExpressionTypes(q, tenv, useDef);
+    	msgs += check(expr, tenv, useDef, q);
     }
   }
    return msgs;
@@ -62,17 +62,15 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
 
 
 //---Check 3
-set[Message] checkQuestionsExpressionTypes(AType t, TEnv tenv, UseDef useDef){
+set[Message] checkQuestionsExpressionTypes(AQuestion q, TEnv tenv, UseDef useDef){
 	set[Message] msgs = {};
-	println(useDef<1>);
-	for (<loc src, loc def> <- useDef) {
-		for (<loc d, _ ,_ , Type ty> <- tenv) {
-	    	//Check 3
-		    if(def == d){
-		        if(getType(t) != ty){
-		        	msgs += { error("The declared type does not match the type of the expression.", src)};
-		        }
-			}
+	//Getting a list of all the individual expression id's with 
+	rel[Type typeName, str name, loc use] expressions = {<getType(typeName), name, i.src> | computedQ(_, _, AType typeName, /AExpr expr) := q, ref(/AId i) := expr, id(str name) := i};
+	for (<Type typeName, str name, loc use><-expressions) {
+		if (<use, loc d> <- useDef, <d, _, _, Type t> <- tenv){
+	        if(t != typeName){
+	        	msgs += { error("The declared type does not match the type of the expression.", use)};
+	        }
 		}
 	}
 	
@@ -109,30 +107,85 @@ set[Message] checkQuestionsDifferentTypes(AId i, AType t, str phrase, TEnv tenv,
 // Check operand compatibility with operators.
 // E.g. for an addition node add(lhs, rhs), 
 //   the requirement is that typeOf(lhs) == typeOf(rhs) == tint()
-set[Message] check(AExpr e, TEnv tenv, UseDef useDef) {
+set[Message] check(AExpr e, TEnv tenv, UseDef useDef, AQuestion q) {
   set[Message] msgs = {};
+  rel[Type typeName, str name, loc use] expressions = {<getType(typeName), name, i.src> | computedQ(_, _, AType typeName, /AExpr expr) := q, ref(/AId i) := expr, id(str name) := i};
   
-  switch (e) {
-    case ref(AId x):
-      msgs += { error("Undeclared question", x.src) | useDef[x.src] == {} };
-    case not(ref(AId x)):{
-	    if(not(exp) := e){
-	    	if(typeOf(exp, tenv, useDef) != tbool()){
-		      msgs += { error("Error, expression must be a boolean!", x.src) | useDef[x.src] == {} };
-		    }
-	    }  
-    }
-    case mul(AExpr expr1, AExpr expr2):{
-    	if(not(exp) := e){
-	    	if(typeOf(exp1, tenv, useDef) == tint() && typeOf(exp2, tenv, useDef) == tint()){
-		      msgs += { error("Undeclared question", x.src) | useDef[x.src] == {} };
-		    }
-	    }  
-    }
-    // etc.
-  }
+ 
+	  switch (e) {
+	    case ref(AId x):{
+	      msgs += { error("Undeclared question", x.src) | useDef[x.src] == {} };
+	    }
+	    case not(_):{
+		    msgs += checkBoolError(expressions, useDef, tenv);
+	    }
+	    case add(_,_):{
+		    msgs += checkIntError(expressions, useDef, tenv);
+	    }
+	    case sub(_,_):{
+		    msgs += checkIntError(expressions, useDef, tenv);
+	    }
+	    case mul(_,_):{
+		    msgs += checkIntError(expressions, useDef, tenv);
+	    }
+	    case div(_,_):{
+		    msgs += checkIntError(expressions, useDef, tenv);
+	    }
+	    case gt(_,_):{
+		    msgs += checkIntError(expressions, useDef, tenv);
+	    }
+	    case lt(_,_):{
+		    msgs += checkIntError(expressions, useDef, tenv);
+	    }
+	    case geq(_,_):{
+		    msgs += checkIntError(expressions, useDef, tenv);
+	    }
+	    case leq(_,_):{
+		    msgs += checkIntError(expressions, useDef, tenv);
+	    }
+	    case eq(_,_):{
+		    msgs += checkIntError(expressions, useDef, tenv);
+	    }
+	    case neq(_,_):{
+		   msgs += checkIntError(expressions, useDef, tenv);
+	    }
+	    case and(_,_):{
+		    msgs += checkBoolError(expressions, useDef, tenv);
+	    }
+	    case or(_,_):{
+		    msgs += checkBoolError(expressions, useDef, tenv);
+	    }
+	    
+	    
+	  }
+  
   
   return msgs; 
+}
+
+//Used for printing errors for expression types and their operation
+set[Message] checkBoolError(rel[Type typeName, str name, loc use] expressions, UseDef useDef, TEnv tenv){
+	set[Message] msgs = {};
+	
+	for (<_,_, loc use><-expressions) {
+    	if (<use, loc d> <- useDef, <d, _, _, Type t> <- tenv){
+    		if(t != tbool()) msgs += { error("Error, expression must be an boolean!", use) };
+    	}
+	}
+	
+	return msgs;
+}
+
+set[Message] checkIntError(rel[Type typeName, str name, loc use] expressions, UseDef useDef, TEnv tenv){
+	set[Message] msgs = {};
+	
+	for (<_,_, loc use><-expressions) {
+    	if (<use, loc d> <- useDef, <d, _, _, Type t> <- tenv){
+    		if(t != tint()) msgs += { error("Error, expression must be an integer!", use) };
+    	}
+	}
+	
+	return msgs;
 }
 
 //Returns the type of an expression
@@ -162,7 +215,7 @@ Type typeOf(AExpr e, TEnv tenv, UseDef useDef) {
  //Getting the type of an AType
  Type getType(AType e) {
   switch (e) {
-    case typeof(str string):  
+    case typeof(str string):
       if (string == "boolean") {
        return tbool();
       } else if (string == "integer"){
@@ -170,6 +223,7 @@ Type typeOf(AExpr e, TEnv tenv, UseDef useDef) {
       } else {
       return tstr();
       }
+      
   }
   return tunknown(); 
 }

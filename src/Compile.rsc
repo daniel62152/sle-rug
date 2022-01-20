@@ -4,6 +4,7 @@ import AST;
 import Resolve;
 import IO;
 import lang::html5::DOM; // see standard library
+import String;
 
 /*
  * Implement a compiler for QL to HTML and Javascript
@@ -225,7 +226,7 @@ str ifCond2div(list[AQuestion] questions, AExpr cond) {
 }
 
 str form2js(AForm f) {
-  map[str, int] store = ();
+  map[str, str] store = ();
   return "function execute() {
          '<for (AQuestion q <- f.questions) {>
          '  <if (q is normalQ || q is computedQ) { store += (q.name.name: q.typeName.typeName);>
@@ -244,13 +245,14 @@ str computedQ2js() {
          ";
 }
 
-str ifCond2js(list[AQuestion] questions, AExpr cond, map[str, int] store) {
+str ifCond2js(list[AQuestion] questions, AExpr cond, map[str, str] store) {
     list[str] store2 = [];
     return "<for (AQuestion q <- questions) { store2 += q.name.name; >
            '  const <q.name.name> = document.getElementById(\"div<q.name.name>\");
     	   '<}>
-    	   
-    	   '  if (<getExpression(cond)>) {
+    	   '<if (getCond(cond) in store){>
+    	   '<if (store[getCond(cond)] == "boolean"){>
+    	   '  if (<getExpression(cond, true)>.checked) {
     	   '  <for (id <- store2) { >
     	   '    <id>.style.display = \"block\";
     	   '  <}>    
@@ -259,36 +261,55 @@ str ifCond2js(list[AQuestion] questions, AExpr cond, map[str, int] store) {
     	   '    <id>.style.display = \"none\";
     	   '  <}>
     	   '  }
+    	   '<}>
+    	   '<} else {>
+    	   '  if (<getExpression(cond, false)>) {
+    	   '  <for (id <- store2) { >
+    	   '    <id>.style.display = \"block\";
+    	   '  <}>    
+    	   '  } else {
+    	   '  <for (id <- store2) { >
+    	   '    <id>.style.display = \"none\";
+    	   '  <}>
+    	   '  }
+    	   '<}>
+    	   '
     	   
     	   '<for (AQuestion q <- questions) {>
     	   '<if (q is computedQ) {>
-           '  document.getElementById(\"input<q.name.name>\").value=<getExpression(q.expr)>
+           '  document.getElementById(\"input<q.name.name>\").value=<getExpression(q.expr, false)>
     	   '<}>
     	   '<}>
     	   
     	   ";
 }
 
-str getExpression(AExpr expr) {
+str getExpression(AExpr expr, bool boolean) {
     str store = "";
     switch (expr) {
-        case ref(AId id): store += "(document.getElementById(\"input<id.name>\"))";
+        case ref(AId id):{ 
+          if (boolean) {
+            store += "(document.getElementById(\"input<id.name>\"))";
+          } else {
+            store += "(document.getElementById(\"input<id.name>\").value)";
+          }
+        }
         case strVal(str string): store += "<string>";
         case intVal(int val): store += "<val>";
         case boolVal(bool boolean): store += "<boolean>";
         case not(AExpr arg): store += "!<getExpression(arg)>";
-        case mul(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1)>*<getExpression(expr2)>)";
-        case div(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1)>/<getExpression(expr2)>)";
-        case add(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1)>+<getExpression(expr2)>)";
-        case sub(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1)>-<getExpression(expr2)>)";
-        case gt(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs)>\><getExpression(rhs)>)";
-        case lt(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs)>\<<getExpression(rhs)>)";
-        case geq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs)>\>=<getExpression(rhs)>)";  
-        case leq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs)>\<=<getExpression(rhs)>)";
-        case eq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs)>==<getExpression(rhs)>)";
-        case neq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs)>!=<getExpression(rhs)>)";
-        case and(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs)>&&<getExpression(rhs)>)";
-        case or(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs)>||<getExpression(rhs)>)";
+        case mul(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, boolean)>*<getExpression(expr2, boolean)>)";
+        case div(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, boolean)>/<getExpression(expr2, boolean)>)";
+        case add(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, boolean)>+<getExpression(expr2, boolean)>)";
+        case sub(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, boolean)>-<getExpression(expr2, boolean)>)";
+        case gt(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>\><getExpression(rhs, boolean)>)";
+        case lt(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>\<<getExpression(rhs, boolean)>)";
+        case geq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>\>=<getExpression(rhs, boolean)>)";  
+        case leq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>\<=<getExpression(rhs, boolean)>)";
+        case eq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>==<getExpression(rhs, boolean)>)";
+        case neq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>!=<getExpression(rhs, boolean)>)";
+        case and(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>&&<getExpression(rhs, boolean)>)";
+        case or(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>||<getExpression(rhs, boolean)>)";
     }
     return store;
 }

@@ -41,9 +41,18 @@ set[Message] check(AForm f, TEnv tenv, UseDef useDef) {
 // Check 1 - produce an error if there are declared questions with the same name but different types.
 // Check 2 - duplicate labels should trigger a warning 
 // Check 3 - the declared type computed questions should match the type of the expression.
+// Check 4 - See that if conditions contain a boolean type
 set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
   set[Message] msgs = {};
   switch (q) {
+	case ifCond(AExpr cond, _):{
+	//--- Check 4
+		msgs += checkIfBooleans(cond, cond.src, tenv, useDef);
+	}
+	//--- Check 4
+	case ifElseCond(AExpr cond,_, _):{
+		msgs += checkIfBooleans(cond, cond.src, tenv, useDef);
+	}
     case normalQ(str phrase, AId i, AType t):{
     	//---Check 1, 2
     	msgs += checkQuestionsDifferentTypes(i, t, phrase, tenv, useDef,q.src);
@@ -60,6 +69,22 @@ set[Message] check(AQuestion q, TEnv tenv, UseDef useDef) {
    return msgs;
 }
 
+//--- Check 4
+set[Message] checkIfBooleans(AExpr e, loc use, TEnv tenv, UseDef useDef){
+	set[Message] msgs = {};
+	if (<use, loc d> <- useDef, <d, _, _, Type t> <- tenv){
+	        if(t != tbool()){
+	        	msgs += { error("The declared type has to be a boolean!", use)};
+	        }
+		}
+		
+	switch (e) {
+	    case ref(AId x):{
+	      msgs += { error("Undeclared boolean!", x.src) | useDef[x.src] == {} };
+	    }
+	}
+	return msgs;
+}
 
 //---Check 3
 set[Message] checkQuestionsExpressionTypes(AQuestion q, TEnv tenv, UseDef useDef){
@@ -100,6 +125,7 @@ set[Message] checkQuestionsDifferentTypes(AId i, AType t, str phrase, TEnv tenv,
 		}
   return msgs; 
 }
+
 
 
 

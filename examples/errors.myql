@@ -6,9 +6,9 @@ form taxOfficeExample {
     hasBoughtHouse: integer
     
   "Did you enter a loan?"
-    hasSoldHouse: integer
+    hasSoldHouse: boolean
    
-  if (hasSodHouse) {
+  if (hasSoldHouse) {
     "What was the selling price?"
       sellingPrice: integer
     "Private debts for the sold house:"

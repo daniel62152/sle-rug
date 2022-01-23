@@ -5,6 +5,7 @@ import Resolve;
 import IO;
 import lang::html5::DOM; // see standard library
 import String;
+import List;
 
 /*
  * Implement a compiler for QL to HTML and Javascript
@@ -51,7 +52,8 @@ str questions2div(list[AQuestion] questions) {
          '    type=\"checkbox\"
          '    id=\"input<q.name.name>\"
          '    name=\"<q.name.name>\"
-         '    onclick=\"execute()\"
+         '    value=\"false\"
+         '    onclick=\"onCheck(\'input<q.name.name>\')\"
          '  \>
          '\</div\>
          '<}>
@@ -63,6 +65,7 @@ str questions2div(list[AQuestion] questions) {
          '    type=\"number\"
          '    id=\"input<q.name.name>\"
          '    name=\"<q.name.name>\"
+         '    value=\"0\"
          '    onchange=\"execute()\"
          '  \>
          '\</div\>
@@ -89,75 +92,10 @@ str questions2div(list[AQuestion] questions) {
          '<}>
          '<if (q is ifElseCond) {>
          ' <ifCond2div(q.ifTrue, q.cond)>
-         ' <elseCond2div(q.ifFalse, q.cond)>
+         ' <ifCond2div(q.ifFalse, q.cond)>
          '<}>
          '<}>
          ";
-}
-
-str elseCond2div(list[AQuestion] questions, AExpr cond) {
-  return "<for (AQuestion q <- questions) {>
-  		 '  <if (q is normalQ) {>
-  		 '  <if (q.typeName.typeName == "integer") {>
-  		 '  \<div id=\"<q.name.name>\" style=\"display: block\"\>
-  		 '    \<p id=\"<q.phrase>\"\><q.phrase>\</p\>
-         '    \<input
-         '      type=\"number\"
-         '      id=\"<q.name.name>\"
-         '      name=\"<q.name.name>\"
-         '      onchange=\"execute()\"
-         '    \>
-         '  \</div\>
-         '  \<br /\>\<br /\>
-  		   '<}>
-  		 '  <if (q.typeName.typeName == "string") {>
-         '  \<div id=\"<q.name.name>\" style=\"display: block\"\>
-         '    \<p id=\"<q.phrase>\"\><q.phrase>\</p\>
-         '    \<input
-         '      type=\"text\"
-         '      id=\"<q.name.name>\"
-         '      name=\"<q.name.name>\"
-         '      onchange=\"execute()\"
-         '    \>
-         '  \</div\>
-         '  \<br /\>\<br /\>
-         '  <}>
-         '  <if (q.typeName.typeName == "boolean") {>
-         '  \<div id=\"<q.name.name>\" style=\"display: block\"\>
-         '    \<p id=\"<q.phrase>\"\><q.phrase>\</p\>
-         '    \<div\>
-         '      \<input
-         '        type=\"checkbox\"
-         '        id=\"input<q.name.name>\"
-         '        name=\"<q.name.name>\"
-         '        onclick=\"execute()\"
-         '      \>
-         '    \</div\>
-         '  \</div\>
-         '  <}>
-         '  <}>
-         '  <if (q is computedQ) {>
-         '  \<div id=\"<q.name.name>\" style=\"display: block\"\>
-         '    \<p id=\"<q.phrase>\"\><q.phrase>\</p\>
-         '    \<input
-         '      type=\"text\"
-         '      id=\"<q.name.name>\"
-         '      name=\"<q.name.name>\"
-         '      onchange=\"execute()\"
-         '      disabled
-         '    \>
-         '  \</div\>
-         '  \<br /\>\<br /\>
-         '  <}>
-         '  <if (q is ifCond) {>
-         '    <ifCond2div(q.then, q.cond)>
-         '  <}>
-         '  <if (q is ifElseCond) {>
-         '    <ifCond2div(q.ifTrue, q.cond)>
-         '    <elseCond2div(q.ifFalse, q.cond)>
-         '  <}>
-         '<}>
-  		 ";
 }
 
 str ifCond2div(list[AQuestion] questions, AExpr cond) {
@@ -170,6 +108,7 @@ str ifCond2div(list[AQuestion] questions, AExpr cond) {
          '      type=\"number\"
          '      id=\"input<q.name.name>\"
          '      name=\"<q.name.name>\"
+         '      value=\"0\"
          '      onchange=\"execute()\"
          '    \>
          '  \</div\>
@@ -190,15 +129,13 @@ str ifCond2div(list[AQuestion] questions, AExpr cond) {
          '  <if (q.typeName.typeName == "boolean") {>
          '  \<div id=\"div<q.name.name>\" style=\"display: none\"\>
          '    \<p id=\"<q.phrase>\"\><q.phrase>\</p\>
-         '    \<div\>
          '      \<input
          '        type=\"checkbox\"
          '        id=\"input<q.name.name>\"
          '        name=\"<q.name.name>\"
-         '        onclick=\"execute()\"
+         '        value=\"false\"
+         '        onclick=\"onCheck(\'input<q.name.name>\')\"
          '      \>
-         '      \<label for=\"yes<q.name.name>\"\>Yes\</label\>
-         '    \</div\>
          '  \</div\>
          '  <}>
          '  <}>
@@ -219,97 +156,165 @@ str ifCond2div(list[AQuestion] questions, AExpr cond) {
          '  <}>
          '  <if (q is ifElseCond) {>
          '    <ifCond2div(q.ifTrue, q.cond)>
-         '    <elseCond2div(q.ifFalse, q.cond)>
+         '    <ifCond2div(q.ifFalse, q.cond)>
          '  <}>
          '<}>
   		 ";
 }
 
 str form2js(AForm f) {
-  map[str, str] store = ();
-  return "function execute() {
+  return "document.addEventListener(\'DOMContentLoaded\', function() {
+  		 '  execute();
+  		 '});
+  		 '
+  		 'function onCheck(input) {
+  	     '  const checkbox = document.getElementById(input);
+  	     '  if (checkbox.value == \"false\") {
+  	     '    checkbox.value = \"true\";
+  	     '  } else {
+  	     '    checkbox.value = \"false\";
+  	     '  }
+  	     '  execute();
+  	     '}
+  	     '
+  		 'function isTrue(input) {
+  	     '  if (String(input).toLowerCase() == \"true\") {
+  	     '    return true;
+  	     '  } else {
+  	     '    return false;
+  	     '  }
+  	     '}
+  	     '
+  	     'function showDiv(id) {
+  	     '  document.getElementById(\"div\"+id).style.display = \'block\';
+  	     '}
+  	     'function hideDiv(id) {
+  	     '  document.getElementById(\"div\"+id).style.display = \'none\';
+  	     '}    
+  		 'function execute() {
          '<for (AQuestion q <- f.questions) {>
-         '  <if (q is normalQ || q is computedQ) { store += (q.name.name: q.typeName.typeName);>
-         '  <}>
-         '  <if (q is ifCond) {>
-         '    <ifCond2js(q.then, q.cond, store)>
-         '  <}>
+         '<execute(q)>
          '<}>
          '}
          ";
 }
 
-str computedQ2js() {
-  return "
-         '
-         ";
+str execute(AQuestion q) {
+  set[str] storeIfCond = {};
+  set[str] storeElseCond = {};
+  return "<if (q is ifCond || q is ifElseCond) {>
+         '  <if (q is ifCond) {>
+         '    <for (question <- q.then) {storeIfCond += getNestedStatements(question, storeIfCond);>
+         '    <}>
+         '  <}>
+         '  <if (q is ifElseCond) {>
+         '    <for (question <- q.ifTrue) {storeIfCond += getNestedStatements(question, storeIfCond);>
+         '    <}>
+         '    <for (question <- q.ifFalse) {storeElseCond += getNestedStatements(question, storeElseCond);>
+         '    <}>
+         '  <}>
+         '	<if (q is ifCond) { >
+         '	<ifCond2js(storeIfCond, q)>
+         '	<}>
+         '	<if (q is ifElseCond) {>
+         '	<ifElseCond2js(storeIfCond, storeElseCond, q)>
+         '	<}>
+         '  
+         '<}>
+         '<if (q is computedQ) {>
+  		 'document.getElementById(\"input<q.name.name>\").value=<getExpression(q.expr, true)>
+         '<}>  
+  		 '
+  	     ";
 }
 
-str ifCond2js(list[AQuestion] questions, AExpr cond, map[str, str] store) {
-    list[str] store2 = [];
-    return "<for (AQuestion q <- questions) { store2 += q.name.name; >
-           '  const <q.name.name> = document.getElementById(\"div<q.name.name>\");
-    	   '<}>
-    	   '<if (getCond(cond) in store){>
-    	   '<if (store[getCond(cond)] == "boolean"){>
-    	   '  if (<getExpression(cond, true)>.checked) {
-    	   '  <for (id <- store2) { >
-    	   '    <id>.style.display = \"block\";
-    	   '  <}>    
-    	   '  } else {
-    	   '  <for (id <- store2) { >
-    	   '    <id>.style.display = \"none\";
-    	   '  <}>
+set[str] getNestedStatements(AQuestion q, set[str] store) {
+	if (q is ifCond) { 
+		for (q2 <- q.then) {
+			store += getNestedStatements(q2, store);
+		}
+	}
+	if (q is ifElseCond) { 
+		for (q2 <- q.ifTrue) {
+			store += getNestedStatements(q2, store);
+		}
+		for (q2 <- q.ifFalse) {
+			store += getNestedStatements(q2, store);
+		}
+	}
+	if (q is normalQ || q is computedQ) { 
+		store += q.name.name;
+	}
+	return store;
+}
+
+str ifCond2js(set[str] storeIfCond, AQuestion question) {
+    return "  if (isTrue(<getExpression(question.cond, true)>)) {
+    	   '    <for (id <- storeIfCond) { >
+    	   '      showDiv(\"<id>\");
+    	   '    <}>
+    	   '	<for (q <- question.then) {>
+    	   '	<execute(q)>
+    	   '	<}>
+    	   '  } else if (!isTrue(<getExpression(question.cond, true)>)) {
+    	   '    <for (id <- storeIfCond) { >
+    	   '      hideDiv(\"<id>\");
+    	   '    <}>
     	   '  }
-    	   '<}>
-    	   '<} else {>
-    	   '  if (<getExpression(cond, false)>) {
-    	   '  <for (id <- store2) { >
-    	   '    <id>.style.display = \"block\";
-    	   '  <}>    
-    	   '  } else {
-    	   '  <for (id <- store2) { >
-    	   '    <id>.style.display = \"none\";
-    	   '  <}>
-    	   '  }
-    	   '<}>
-    	   '
-    	   
-    	   '<for (AQuestion q <- questions) {>
-    	   '<if (q is computedQ) {>
-           '  document.getElementById(\"input<q.name.name>\").value=<getExpression(q.expr, false)>
-    	   '<}>
-    	   '<}>
-    	   
     	   ";
 }
 
-str getExpression(AExpr expr, bool boolean) {
+str ifElseCond2js(set[str] storeIfCond, set[str] storeElseCond, AQuestion question) {
+    return "  if (isTrue(<getExpression(question.cond, true)>)) {
+    	   '    <for (id <- storeIfCond) { >
+    	   '	  showDiv(\"<id>\");
+    	   '    <}>
+    	   '	<for (id <- storeElseCond) { >
+		   '	  hideDiv(\"<id>\");
+    	   '    <}>
+    	   '	<for (q <- question.ifTrue) {>
+    	   '	<execute(q)>
+    	   '	<}>
+    	   '  } else {
+    	   '    <for (id <- storeElseCond) { >
+    	   '      showDiv(\"<id>\");
+    	   '    <}>
+    	   '	<for (id <- storeIfCond) { >
+    	   '      hideDiv(\"<id>\");
+    	   '    <}>
+    	   '	<for (q <- question.ifFalse) {>
+    	   '	<execute(q)>
+    	   '	<}>
+    	   '  }
+    	   ";
+}
+
+str getExpression(AExpr expr, bool withValue) {
     str store = "";
     switch (expr) {
         case ref(AId id):{ 
-          if (boolean) {
-            store += "(document.getElementById(\"input<id.name>\"))";
+          if (withValue) {
+            store += "(document.getElementById(\"input<id.name>\")).value";
           } else {
-            store += "(document.getElementById(\"input<id.name>\").value)";
+            store += "(document.getElementById(\"input<id.name>\"))";
           }
         }
         case strVal(str string): store += "<string>";
         case intVal(int val): store += "<val>";
         case boolVal(bool boolean): store += "<boolean>";
-        case not(AExpr arg): store += "!<getExpression(arg)>";
-        case mul(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, boolean)>*<getExpression(expr2, boolean)>)";
-        case div(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, boolean)>/<getExpression(expr2, boolean)>)";
-        case add(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, boolean)>+<getExpression(expr2, boolean)>)";
-        case sub(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, boolean)>-<getExpression(expr2, boolean)>)";
-        case gt(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>\><getExpression(rhs, boolean)>)";
-        case lt(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>\<<getExpression(rhs, boolean)>)";
-        case geq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>\>=<getExpression(rhs, boolean)>)";  
-        case leq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>\<=<getExpression(rhs, boolean)>)";
-        case eq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>==<getExpression(rhs, boolean)>)";
-        case neq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>!=<getExpression(rhs, boolean)>)";
-        case and(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>&&<getExpression(rhs, boolean)>)";
-        case or(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, boolean)>||<getExpression(rhs, boolean)>)";
+        case not(AExpr arg): store += "!<getExpression(arg, withValue)>";
+        case mul(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, withValue)>*<getExpression(expr2, withValue)>)";
+        case div(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, withValue)>/<getExpression(expr2, withValue)>)";
+        case add(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, withValue)>+<getExpression(expr2, withValue)>)";
+        case sub(AExpr expr1, AExpr expr2): store += "(<getExpression(expr1, withValue)>-<getExpression(expr2, withValue)>)";
+        case gt(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, withValue)>\><getExpression(rhs, withValue)>)";
+        case lt(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, withValue)>\<<getExpression(rhs, withValue)>)";
+        case geq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, withValue)>\>=<getExpression(rhs, withValue)>)";  
+        case leq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, withValue)>\<=<getExpression(rhs, withValue)>)";
+        case eq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, withValue)>==<getExpression(rhs, withValue)>)";
+        case neq(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, withValue)>!=<getExpression(rhs, withValue)>)";
+        case and(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, withValue)>&&<getExpression(rhs, withValue)>)";
+        case or(AExpr lhs, AExpr rhs): store += "(<getExpression(lhs, withValue)>||<getExpression(rhs, withValue)>)";
     }
     return store;
 }

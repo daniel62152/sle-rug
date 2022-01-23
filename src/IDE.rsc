@@ -37,7 +37,16 @@ void main() {
         AForm ast = cst2ast(pt);
         UseDef useDef = resolve(ast).useDef;
         set[Message] msgs = check(ast, collect(ast), useDef);
-        if (msgs == {}) {
+        set[Message] errors = {};
+        set[Message] warnings = {};
+        for(m <- msgs){
+        	if(warning(_, _) := m){
+        		warnings += {m};
+        	}else {
+        		errors += {m};
+        	} 
+        }
+        if (errors == {}) {
           compile(ast);
         }
         return msgs;

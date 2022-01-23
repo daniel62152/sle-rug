@@ -12,7 +12,7 @@ form taxOfficeExample {
     "What was the selling price?"
       sellingPrice: integer
     "Private debts for the sold house:"
-      privateDebt: integer = (jeff + sellingPrice)
+      privateDebt: integer = (1 + sellingPrice)
     "Value residue:"
       valueResidue: integer = 
         ((sellingPrice - privateDebt) * 2)

@@ -318,30 +318,3 @@ str getExpression(AExpr expr, bool withValue) {
     }
     return store;
 }
-
-str getCond(AExpr expr) {
-    str store = "";
-    switch (expr) {
-        case ref(AId id): store += "<id.name>";
-        case strVal(str string): store += "<string>";
-        case intVal(int val): store += "<val>";
-        case boolVal(bool boolean): store += "<boolean>";
-        case not(AExpr arg): store += "!<getCond(arg)>";
-        case mul(AExpr expr1, AExpr expr2): store += "(<getCond(expr1)>*<getCond(expr2)>)";
-        case div(AExpr expr1, AExpr expr2): store += "(<getCond(expr1)>/<getCond(expr2)>)";
-        case add(AExpr expr1, AExpr expr2): store += "(<getCond(expr1)>+<getCond(expr2)>)";
-        case sub(AExpr expr1, AExpr expr2): store += "(<getCond(expr1)>-<getCond(expr2)>)";
-        case gt(AExpr lhs, AExpr rhs): store += "(<getCond(lhs)>\><getCond(rhs)>)";
-        case lt(AExpr lhs, AExpr rhs): store += "(<getCond(lhs)>\<<getCond(rhs)>)";
-        case geq(AExpr lhs, AExpr rhs): store += "(<getCond(lhs)>\>=<getCond(rhs)>)";  
-        case leq(AExpr lhs, AExpr rhs): store += "(<getCond(lhs)>\<=<getCond(rhs)>)";
-        case eq(AExpr lhs, AExpr rhs): store += "(<getCond(lhs)>==<getCond(rhs)>)";
-        case neq(AExpr lhs, AExpr rhs): store += "(<getCond(lhs)>!=<getCond(rhs)>)";
-        case and(AExpr lhs, AExpr rhs): store += "(<getCond(lhs)>&&<getCond(rhs)>)";
-        case or(AExpr lhs, AExpr rhs): store += "(<getCond(lhs)>||<getCond(rhs)>)";     
-    }
-   
-    return store;
-}
-
-

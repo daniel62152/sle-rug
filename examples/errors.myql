@@ -5,10 +5,13 @@ form taxOfficeExample {
   "Did you enter a 2 loan?"
     hasBoughtHouse: integer
     
+   "Did you enter a 2 loan warning test?"
+    hasBoughtHouse: integer
+    
   "Did you enter a loan?"
     hasSoldHouse: boolean
    
-  if (hasSoldHouse) {
+  if (hasBoughtHouse > 4) {
     "What was the selling price?"
       sellingPrice: integer
     "Private debts for the sold house:"
@@ -17,6 +20,6 @@ form taxOfficeExample {
       valueResidue: integer = 
         ((sellingPrice - privateDebt) * 2)
     "Private debts tings"
-      privateName: boolean = (hasBoughHouse && (hasBoughHouse))
+      privateName: integer = (hasBoughtHouse - (hasBoughtHouse))
   }
 }

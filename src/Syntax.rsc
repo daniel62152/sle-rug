@@ -10,19 +10,18 @@ extend lang::std::Id;
 start syntax Form 
   = "form" Id "{" Question* "}"; 
 
-// TODO: question, computed question, block, if-then-else, if-then
+// Syntax for question, computed question, block, if-then-else, if-then
 syntax Question
   =  "if" "("Expr")" "{" Question* "}"
   | "if" "("Expr")" "{" Question* "}" "else" "{" Question* "}"
-  | "\""Str"\"" Id":" Type
-  | "\""Str"\"" Id":" Type "=" Expr 
+  | Str Id":" Type
+  | Str Id":" Type "=" Expr 
   ;
 
-// TODO: +, -, *, /, &&, ||, !, >, <, <=, >=, ==, !=, literals (bool, int, str)
-// Think about disambiguation using priorities and associativity
-// and use C/Java style precedence rules (look it up on the internet)
+// Syntax for Expressions in QL
+// true/false are reserved keywords for some of the expressions.
 syntax Expr 
-  = Id \ "true" \ "false" // true/false are reserved keywords.
+  = Id \ "true" \ "false"
   | Str
   | Int
   | Bool
@@ -54,15 +53,18 @@ syntax Expr
   > left Expr "||" Expr
   ;
   
+// Types that are accepted in QL
 syntax Type
   = "string"
   | "integer"
   | "boolean"
   ;  
-  
-lexical Str = [A-Z][\t-\n\r\ A-Z a-z 0-9 _]*"?"?":"?;
-//lexical Str = ![\"]*"?"?":"?;
 
+// String lexical in QL  
+lexical Str = "\"" ![\"]* "\"" ;
+
+// Int lexical in QL
 lexical Int = [0-9]+;
 
+// Bool lexical in QL
 lexical Bool = "true" | "false";

@@ -16,13 +16,12 @@ import String;
  * - See the ref example on how to obtain and propagate source locations.
  */
 
-bool toBool(str text){
-	if(text == "true"){
-		return true;
-		
-	} else {
-		return false;
-	}
+bool toBool(str text) {
+  if (text == "true") {
+	return true;	
+  } else {
+    return false;
+  }
 }
 
 
@@ -38,8 +37,8 @@ AQuestion cst2ast(Question q) {
   switch (q) {
     case quest:(Question)`if (<Expr e>) {<Question* qs>}`: return ifCond(cst2ast(e), [ cst2ast(q) | Question q <- qs ], src=quest@\loc);
     case quest:(Question)`if (<Expr e>) {<Question* qs1>} else {<Question* qs2>}`: return ifElseCond(cst2ast(e), [ cst2ast(q) | Question q <- qs1 ], [ cst2ast(q) | Question q <- qs2 ], src=quest@\loc);
-    case quest:(Question)`"<Str s>" <Id f>: <Type t>`: return normalQ("<s>", id("<f>", src=f@\loc), typeof("<t>", src=t@\loc), src=quest@\loc);
-    case quest:(Question)`"<Str s>" <Id f>: <Type t> = <Expr e>`:return computedQ("<s>", id("<f>", src=f@\loc), typeof("<t>", src=t@\loc), cst2ast(e), src=quest@\loc);
+    case quest:(Question)`<Str s> <Id f>: <Type t>`: return normalQ("<s>", id("<f>", src=f@\loc), typeof("<t>", src=t@\loc), src=quest@\loc);
+    case quest:(Question)`<Str s> <Id f>: <Type t> = <Expr e>`:return computedQ("<s>", id("<f>", src=f@\loc), typeof("<t>", src=t@\loc), cst2ast(e), src=quest@\loc);
     default: throw "Error in question";
   }
 }

@@ -32,29 +32,22 @@ VEnv initialEnv(AForm f) {
   for(/AQuestion q:= f) {
     switch (q) {
       case normalQ(_, AId i, AType typeName): {
-        if(typeof(str tName) := typeName) {
-          if(id(str name) := i) {
-            setDefaultValue(tName, name, initial);
-          }
-        }
+        initial[i.name] = setDefaultValue(typeName.typeName);
       }
       case computedQ(_, AId i, AType typeName, _): {
-        if(typeof(str tName) := typeName) {
-          if(id(str name) := i) {
-            setDefaultValue(tName, name, initial);
-          }
-        }
+        initial[i.name] = setDefaultValue(typeName.typeName);
       }
     }
   }
   return initial;
 }
 
-void setDefaultValue(str tName, str name, VEnv init) {
+Value setDefaultValue(str tName) {
   switch (tName) {
-    case "integer": init[name] = vint(0);
-    case "string": init[name] = vstr("");
-    case "boolean": init[name] = vbool(false);
+    case "integer": return vint(0);
+    case "string": return vstr("");
+    case "boolean": return vbool(false);
+    default: throw "Unknown type";
   }
 }
 
@@ -67,44 +60,45 @@ VEnv eval(AForm f, Input inp, VEnv venv) {
 }
 
 VEnv evalOnce(AForm f, Input inp, VEnv venv) {
-  VEnv env = ();
-  for(/AQuestion q:= f) {
-    env += eval(q, inp, venv);
+  for(/AQuestion q <- f) {
+    venv += eval(q, inp, venv);
   }
-  return env; 
+  return venv; 
 }
 
 
 VEnv eval(AQuestion q, Input inp, VEnv venv) {
   // evaluate conditions for branching,
   // evaluate inp and computed questions to return updated VEnv
-  VEnv env = venv;
   switch (q) {
+    case normalQ(_, AId name, _): {
+      if (inp.question == name.name) {
+        venv[name.name] = inp.\value;
+      }
+    }
+    case computedQ(_, AId name, _, AExpr expr): {
+        venv[name.name] = eval(expr, venv);
+    }
     case ifCond(AExpr cond, list[AQuestion] then): {
-      if (eval(cond, env).b) {
-        for (qs <- then) {
-          env = eval(qs, inp, env);
+      if (eval(cond, venv).b) {
+        for (q2 <- then) {
+          venv += eval(q2, inp, venv);
         }
       }
     }
     case ifElseCond(AExpr cond, list[AQuestion] ifTrue, list[AQuestion] ifFalse): {
-      if (eval(cond, env).b) {
-        for (qs <- ifTrue) {
-          env = eval(qs, inp, env);
+      if (eval(cond, venv).b) {
+        for (q2 <- ifTrue) {
+          venv += eval(q2, inp, venv);
         }
       } else {
-        for (qs <- ifFalse) {
-          env = eval(qs, inp, env);
+        for (q2 <- ifFalse) {
+          venv += eval(q2, inp, venv);
         }
-      }
-    }
-    case computedQ(_, AId name, _, AExpr expr): {
-      if (eval(expr, env).b) {
-        env[name.name] = eval(expr,env);
       }
     }
   }
-  return env;
+  return venv;
 }
 
 Value eval(AExpr e, VEnv venv) {

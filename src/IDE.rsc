@@ -39,12 +39,12 @@ void main() {
         set[Message] msgs = check(ast, collect(ast), useDef);
         set[Message] errors = {};
         set[Message] warnings = {};
-        for(m <- msgs){
-        	if(warning(_, _) := m){
-        		warnings += {m};
-        	}else {
-        		errors += {m};
-        	} 
+        for (m <- msgs) {
+          if (warning(_, _) := m){
+        	warnings += {m};
+          } else {
+        	errors += {m};
+          } 
         }
         if (errors == {}) {
           compile(ast);
